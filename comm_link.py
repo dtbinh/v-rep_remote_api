@@ -12,57 +12,40 @@ except:
     print ('')
 
 import sys
-import time
-import utils.vrep_pad
-import numpy
+import numpy as np
 
-print ('Program started')
+from quadstick import PS3 as Controller
+
+initialCall=True
+
+print ('VREP Simulation Program')
 vrep.simxFinish(-1) # just in case, close all opened connections
 clientID=vrep.simxStart('127.0.0.1',19999,True,True,5000,5) # Connect to V-REP
 if clientID!=-1:
     print ('Connected to remote API server')
-    gpad = utils.vrep_pad.XBOX360()
+    controller = Controller(('Stabilize', 'Hold Altitude', 'Unused'))
 else:
     print('Connection Failure')
     sys.exit('Abort Connection')
 
-    
 # Object handle                                  
-errorFlag, Quadbase = vrep.simxGetObjectHandle(clientID,
-                                               'Quadricopter_base',
-                                               vrep.simx_opmode_oneshot_wait)
-errorFlag, Quadobj = vrep.simxGetObjectHandle(clientID,
-                                              'Quadricopter',
-                                              vrep.simx_opmode_oneshot_wait)                                                                                                  
-t = time.time()
+_,Quadbase=vrep.simxGetObjectHandle(clientID,'Quadricopter_base',
+                                    vrep.simx_opmode_oneshot_wait)                                                                                                  
 
-## reset
-#resetFlag = vrep.simxRemoveModel(clientID,
-#                                 Quadobj,
-#                                 vrep.simx_opmode_oneshot_wait)
-#resetFlag, quad = vrep.simxLoadModel(clientID,
-#                                     'C:/Users/originholic/Documents/Python Scripts/RL/vrep/QuadSim.ttm',
-#                                     0,
-#                                     vrep.simx_opmode_oneshot_wait)
-                                             
-    
-errorFlag, Quadbase = vrep.simxGetObjectHandle(clientID,
-                                               'Quadricopter_base',
-                                               vrep.simx_opmode_oneshot_wait)
-time.sleep(1)
-    
-while (time.time()-t)<60:
+while True:
     # Code for testing...
-    errorFlag, basePos = vrep.simxGetObjectPosition(clientID,
-                                                    Quadbase,-1,
-                                                    vrep.simx_opmode_streaming)
-    errorFlag, test_data = vrep.simxGetFloatSignal(clientID,
-                                                     'testPTV',
-                                                     vrep.simx_opmode_streaming)                
-    if errorFlag != 0 :
-        print('data fetch failure')
+    if initialCall:
+        mode = vrep.simx_opmode_streaming
+        initialCall = False
     else:
-        print('x: '+ str(test_data))                                                      
+        mode = vrep.simx_opmode_buffer
+        
+    errorFlag,rawStringData=vrep.simxGetStringSignal(clientID,'rawMeasuredData',mode)
+    if errorFlag == 0:
+        rawFloatData=vrep.simxUnpackFloats(rawStringData)
+    else:
+        print('Measurements Awaiting')             
+                                                     
     # gamepad test
 #    gpCmd = gpad.DetectAction()
 #    demands = RescaleInputs(gpCmd)
@@ -74,4 +57,4 @@ while (time.time()-t)<60:
 #                                                     vrep.simx_opmode_streaming)
     #print(data_string)                                                     
                                                                
-print ('End of Script')                                          
+print ('EOS')                                          
