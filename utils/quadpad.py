@@ -43,7 +43,7 @@ class quadCTRL:
         self.clock = pygame.time.Clock()
         self.right_stick = numpy.array(numpy.zeros(2), float)
         self.left_stick = numpy.array(numpy.zeros(2), float)
-        self.memos_stick = numpy.array(numpy.zeros(4), float)
+        #self.memos_stick = numpy.array(numpy.zeros(4), float)
         PLATFORM = platform.uname()[0].upper()
         WINDOWS_PLATFORM = PLATFORM == 'WINDOWS'
         self.WINDOWS_XBOX_360 = False
@@ -64,7 +64,7 @@ class quadCTRL:
                 print('Using pygame joystick')
                 self.joystick.init()
         else:
-            print('Using default pygame joystick')
+            print('Try default pygame joystick')
             self.joystick = pygame.joystick.Joystick(0)
             self.joystick.init()
             JOYSTICK_NAME = self.joystick.get_name()
@@ -80,22 +80,37 @@ class quadCTRL:
     def DetectAction(self):
         self.clock.tick(self.max_fps)
         if self.WINDOWS_XBOX_360:
-            self.joystick.dispatch_events()           
-        
-        for e in pygame.event.get():
-            #print('event: {}'.format(pygame.event.event_name(e.type)))
-            if e.type == JOYAXISMOTION:
-                #print('JOYAXISMOTION: axis {}, value {}'.format(e.axis, e.value))
-                if e.axis == 3:
-                    self.right_stick[0] = self.stick_center_snap(e.value * -1)
-                    #return self.right_stick 
-                elif e.axis == 4:
-                    self.right_stick[1] = self.stick_center_snap(e.value * -1)
-                    #return self.right_stick
-                elif e.axis == 0:
-                    self.left_stick[1] = self.stick_center_snap(e.value)
-                elif e.axis == 1:
-                    self.left_stick[0] = self.stick_center_snap(e.value)
-                
-        self.memos_stick = numpy.concatenate((self.right_stick,self.left_stick))
-        return self.memos_stick
+            self.joystick.dispatch_events()                 
+            for e in pygame.event.get():
+                #print('event: {}'.format(pygame.event.event_name(e.type)))
+                if e.type == JOYAXISMOTION:
+                    #print('JOYAXISMOTION: axis {}, value {}'.format(e.axis, e.value))
+                    if e.axis == 3:
+                        self.right_stick[0] = self.stick_center_snap(e.value * -1)
+                        #return self.right_stick 
+                    elif e.axis == 4:
+                        self.right_stick[1] = self.stick_center_snap(e.value * -1)
+                        #return self.right_stick
+                    elif e.axis == 0:
+                        self.left_stick[1] = self.stick_center_snap(e.value)
+                    elif e.axis == 1:
+                        self.left_stick[0] = self.stick_center_snap(e.value) 
+            return numpy.concatenate((self.right_stick,self.left_stick))
+        else:
+            for e in pygame.event.get():
+                #print('event: {}'.format(pygame.event.event_name(e.type)))
+                if e.type == JOYAXISMOTION:
+                    #print('JOYAXISMOTION: axis {}, value {}'.format(e.axis, e.value))
+                    if e.axis == 3:
+                        self.right_stick[0] = self.stick_center_snap(e.value * -1)
+                        #return self.right_stick 
+                    elif e.axis == 2:
+                        self.right_stick[1] = self.stick_center_snap(e.value * -1)
+                        #return self.right_stick
+                    elif e.axis == 0:
+                        self.left_stick[1] = self.stick_center_snap(e.value)
+                    elif e.axis == 1:
+                        self.left_stick[0] = self.stick_center_snap(e.value) 
+            return numpy.concatenate((self.right_stick,self.left_stick))
+    def Destroyer(self):
+        pygame.quit()
