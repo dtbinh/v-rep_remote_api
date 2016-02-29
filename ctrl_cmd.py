@@ -11,6 +11,7 @@ except:
     print ('')
 import sys
 import os
+import time
 import numpy as np
 from utils.quadpad import quadCTRL
 from utils.fmu import FMU
@@ -38,35 +39,36 @@ while True:
         else:
             mode = vrep.simx_opmode_buffer
             
-        errorFlag,rawStringData=vrep.simxGetStringSignal(clientID,'rawMeasuredData',mode)    
-        if errorFlag == vrep.simx_return_ok:
-            rawFloatData=vrep.simxUnpackFloats(rawStringData)
-            print(len(rawFloatData))
-        else:
-            print('Measurements Awaiting')
-            
-        # Convert Euler angles to pitch, roll, yaw
-        rollRad, pitchRad = rotate((rawFloatData[-4],rawFloatData[-3]),rawFloatData[-2])
-        pitchRad = -pitchRad
-        yawRad   = -rawFloatData[-2]
-    
-        # Get altitude directly from position Z
-        altiMeters = rawFloatData[-5]
-        #print(str(altiMeters))
-        
         # Poll controller
         demands = joystick.DetectAction()
         print("R: " + str(demands[0]) + " " +str(demands[1]) + " " + 
               "L: " + str(demands[2]) + " " +str(demands[3]))
+            
+        errorFlag,rawStringData=vrep.simxGetStringSignal(clientID,'rawMeasuredData',mode)    
+        if errorFlag == vrep.simx_return_ok:
+            rawFloatData=vrep.simxUnpackFloats(rawStringData)
+            print(len(rawFloatData))
+            
+            # Convert Euler angles to pitch, roll, yaw
+            rollRad, pitchRad = rotate((rawFloatData[-4],rawFloatData[-3]),rawFloatData[-2])
+            pitchRad = -pitchRad
+            yawRad   = -rawFloatData[-2]
+            
+            # Get altitude directly from position Z
+            altiMeters = rawFloatData[-5]
+            #print(str(altiMeters))
+                  
+            # Get motor thrusts from FMU model
+            thrusts = fmu.getMotors((pitchRad, rollRad, yawRad), altiMeters,
+                                    demands, rawFloatData[-1])
+            for t in range(4):
+                vrep.simxSetFloatSignal(clientID,'thrusts'+str(t+1),thrusts[t],
+                                        vrep.simx_opmode_oneshot)
+        else:
+            print('Measurements Awaiting')
+            initialCall = True
+            time.sleep(1.0)
     
-        # Get motor thrusts from FMU model
-        thrusts = fmu.getMotors((pitchRad, rollRad, yawRad), altiMeters,
-                                demands, rawFloatData[-1])
-        for t in range(4):
-            errorFlag = vrep.simxSetFloatSignal(clientID,
-                                                'thrusts'+str(t+1),
-                                                thrusts[t],
-                                                vrep.simx_opmode_oneshot) 
     except KeyboardInterrupt:
         print "Oops!"
         try:

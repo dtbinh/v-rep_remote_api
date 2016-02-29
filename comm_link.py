@@ -12,6 +12,7 @@ except:
     print ('')
 
 import sys
+import time
 import numpy as np
 
 initialCall=True
@@ -26,8 +27,7 @@ else:
     sys.exit('Abort Connection')
 
 # Object handle                                  
-_,Quadbase=vrep.simxGetObjectHandle(clientID,'Quadricopter_base',
-                                    vrep.simx_opmode_oneshot_wait)                                                                                                  
+_,Quadbase=vrep.simxGetObjectHandle(clientID,'Quadricopter_base',vrep.simx_opmode_oneshot_wait)                                                                                                  
 
 while True:
     # Code for testing...
@@ -42,6 +42,7 @@ while True:
         rawFloatData=vrep.simxUnpackFloats(rawStringData)
         print(len(rawFloatData))
     else:
-        print('Measurements Awaiting')             
+        print('Measurements Awaiting')
+        time.sleep(1.0)             
                                                           
 print ('EOS')
