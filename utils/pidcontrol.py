@@ -245,7 +245,7 @@ class Hover_PID_Controller(PID_Controller):
 
         # If there's a target, use it; otherwise use zero velocity as target
         correction = PID_Controller.getCorrection(self, target, position, timestep) \
-                     if target \
+                     if isinstance(target,float) \
                      else PID_Controller.getCorrection(self, 0, velocity, timestep) \
 
         # Keep within limits

@@ -102,7 +102,7 @@ class quadCTRL:
                 if e.type == JOYAXISMOTION:
                     #print('JOYAXISMOTION: axis {}, value {}'.format(e.axis, e.value))
                     if e.axis == 3:
-                        self.right_stick[0] = self.stick_center_snap(e.value * -1)
+                        self.right_stick[0] = self.stick_center_snap(e.value)
                         #return self.right_stick 
                     elif e.axis == 2:
                         self.right_stick[1] = self.stick_center_snap(e.value * -1)

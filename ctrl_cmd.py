@@ -10,12 +10,8 @@ except:
     print ('--------------------------------------------------------------')
     print ('')
 import sys
-import os
-import time
-import numpy as np
 from utils.quadpad import quadCTRL
-from utils.fmu import FMU
-from utils.geometry import rotate
+#from quadstick import PS3 as Controller
 
 initialCall=True
 
@@ -25,56 +21,26 @@ clientID=vrep.simxStart('127.0.0.1',19999,True,True,5000,5) # Connect to V-REP
 if clientID!=-1:
     print ('Connected to remote API server')
     joystick = quadCTRL()
-    fmu = FMU()
+    # Object handle                                  
+#    _,Quadbase=vrep.simxGetObjectHandle(clientID,'Quadricopter_base',vrep.simx_opmode_oneshot_wait)                                                                                                  
+
 else:
     print('Connection Failure')
     sys.exit('Abort Connection')
     
 while True:
-    try:
-        # Code for testing...
-        if initialCall:
-            mode = vrep.simx_opmode_streaming
-            initialCall = False
-        else:
-            mode = vrep.simx_opmode_buffer
-            
-        # Poll controller
-        demands = joystick.DetectAction()
-        print("R: " + str(demands[0]) + " " +str(demands[1]) + " " + 
-              "L: " + str(demands[2]) + " " +str(demands[3]))
-            
-        errorFlag,rawStringData=vrep.simxGetStringSignal(clientID,'rawMeasuredData',mode)    
-        if errorFlag == vrep.simx_return_ok:
-            rawFloatData=vrep.simxUnpackFloats(rawStringData)
-            print(len(rawFloatData))
-            
-            # Convert Euler angles to pitch, roll, yaw
-            rollRad, pitchRad = rotate((rawFloatData[-4],rawFloatData[-3]),rawFloatData[-2])
-            pitchRad = -pitchRad
-            yawRad   = -rawFloatData[-2]
-            
-            # Get altitude directly from position Z
-            altiMeters = rawFloatData[-5]
-            #print(str(altiMeters))
-                  
-            # Get motor thrusts from FMU model
-            thrusts = fmu.getMotors((pitchRad, rollRad, yawRad), altiMeters,
-                                    demands, rawFloatData[-1])
-            for t in range(4):
-                vrep.simxSetFloatSignal(clientID,'thrusts'+str(t+1),thrusts[t],
-                                        vrep.simx_opmode_oneshot)
-        else:
-            print('Measurements Awaiting')
-            initialCall = True
-            time.sleep(1.0)
-    
-    except KeyboardInterrupt:
-        print "Oops!"
-        try:
-            joystick.Destroyer()
-            sys.exit(0)
-        except SystemExit:
-            os._exit(0)
+    # Code for testing...
+    if initialCall:
+        mode = vrep.simx_opmode_streaming
+        initialCall = False
+    else:
+        mode = vrep.simx_opmode_buffer
 
+    # Poll controller
+    demands = joystick.DetectAction()
+    print("R: " + str(demands[0]) + " " +str(demands[1]) + " " + 
+          "L: " + str(demands[2]) + " " +str(demands[3]))
+    demandString=vrep.simxPackFloats(demands)
+    vrep.simxSetStringSignal(clientID,'demandstring',demandString,vrep.simx_opmode_oneshot)
+            
 print('EOS')
