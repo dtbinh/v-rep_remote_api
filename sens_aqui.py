@@ -26,7 +26,8 @@ else:
     sys.exit('Abort Connection')
 
 # Object handle                                  
-_,Quadbase=vrep.simxGetObjectHandle(clientID,'Quadricopter_base',vrep.simx_opmode_oneshot_wait)                                                                                                  
+_,quadBase=vrep.simxGetObjectHandle(clientID,'Quadricopter_base',vrep.simx_opmode_oneshot_wait)
+_,jointPole=vrep.simxGetObjectHandle(clientID,'Pole_joint',vrep.simx_opmode_oneshot_wait)                                                                                                 
 
 while True:
     # Code for testing...
@@ -36,10 +37,9 @@ while True:
     else:
         mode = vrep.simx_opmode_buffer
         
-    errorFlag,rawStringData=vrep.simxGetStringSignal(clientID,'rawMeasuredData',mode)    
+    errorFlag,jointPos=vrep.simxGetJointPosition(clientID,jointPole,mode)    
     if errorFlag == vrep.simx_return_ok:
-        rawFloatData=vrep.simxUnpackFloats(rawStringData)
-        print(len(rawFloatData))
+        print(str(jointPos))
     else:
         print('Measurements Awaiting')
         time.sleep(1.0)
